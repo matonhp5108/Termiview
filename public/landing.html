@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Termiview is a local file explorer and terminal in one focused workspace."
+    />
+    <title>Termiview - your files, in command</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/atom-one-dark.min.css"
+    />
+    <link rel="stylesheet" href="landing.css" />
+  </head>
+  <body>
+    <div class="page-glow" aria-hidden="true"></div>
+    <header class="site-header">
+      <a class="topbar-mark" href="/" aria-label="Termiview home"
+        ><img src="assets/termiview-mark.png" alt="" /><span>Termiview</span></a
+      >
+      <nav aria-label="Main navigation">
+        <a href="#features">Features</a>
+        <a href="#install">Install</a>
+        <a href="https://github.com/matonhp5108/termiview">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <div class="hero-field">
+        <section class="hero" aria-labelledby="hero-title">
+          <h1 id="hero-title">
+            Your homelab.<br />Your terminal.<br /><em>One clear view.</em>
+          </h1>
+          <p class="hero-copy">
+            A focused workspace for the files, shells, and SSH servers that keep
+            your homelab running.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#install"
+              >Get Termiview <span>↓</span></a
+            >
+          </div>
+        </section>
+
+        <section class="product-frame" aria-label="Termiview interface preview">
+          <div class="frame-topbar">
+            <span></span><span></span><span></span>
+            <p>Termiview</p>
+          </div>
+          <img
+            src="assets/termiview-ui.jpg"
+            alt="Termiview file explorer and terminal"
+          />
+          <div class="frame-fade" aria-hidden="true"></div>
+        </section>
+      </div>
+
+      <section class="trusted-strip" aria-label="Termiview highlights">
+        <p>Made for the machine you already use.</p>
+        <div><span>Compatible with: macOS and Linux</span></div>
+      </section>
+
+      <section class="features" id="features" aria-labelledby="features-title">
+        <div class="section-heading">
+          <h2 id="features-title">A workspace that stays out of your way.</h2>
+          <p>
+            Spend less time hopping between terminal windows and file transfers.
+            Keep the server work in one place.
+          </p>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card feature-files">
+            <div class="card-copy">
+              <p class="card-number">01</p>
+              <h3>Server files, in reach.</h3>
+              <p>
+                Browse, preview, upload, download, and manage the home
+                directories and volumes that matter from one familiar view.
+              </p>
+            </div>
+            <div class="card-preview">
+              <img
+                src="assets/termiview-ui.jpg"
+                alt="Termiview file explorer"
+              />
+            </div>
+          </article>
+          <article class="feature-card feature-terminal">
+            <div class="card-copy">
+              <p class="card-number">02</p>
+              <h3>A terminal for the job.</h3>
+              <p>
+                Keep commands beside the files they change. Dock it where you
+                work, resize it, or let it fill the screen.
+              </p>
+            </div>
+            <div class="card-preview">
+              <img
+                src="assets/termiview-ui.jpg"
+                alt="Termiview terminal panel"
+              />
+            </div>
+          </article>
+          <article class="feature-card feature-live">
+            <div class="card-copy">
+              <p class="card-number">03</p>
+              <h3>Always current.</h3>
+              <p>
+                Changes on disk arrive in the explorer as they happen, so your
+                workspace keeps pace with the server.
+              </p>
+            </div>
+            <div class="card-preview">
+              <img
+                src="assets/termiview-ui.jpg"
+                alt="Termiview live file workspace"
+              />
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="install" id="install" aria-labelledby="install-title">
+        <div class="install-intro">
+          <h2 id="install-title">Your server workspace in a few minutes.</h2>
+          <p>
+            Set it up on a homelab host or SSH server. The quick installer takes
+            care of the platform-specific bits.
+          </p>
+        </div>
+        <div class="install-switcher">
+          <div
+            class="install-tabs"
+            role="tablist"
+            aria-label="Installation method"
+          >
+            <button
+              role="tab"
+              aria-selected="true"
+              aria-controls="install-quick"
+              id="tab-quick"
+              data-install-tab="quick"
+            >
+              Quick install
+            </button>
+            <button
+              role="tab"
+              aria-selected="false"
+              aria-controls="install-compose"
+              id="tab-compose"
+              data-install-tab="compose"
+            >
+              Docker Compose
+            </button>
+            <button
+              role="tab"
+              aria-selected="false"
+              aria-controls="install-docker"
+              id="tab-docker"
+              data-install-tab="docker"
+            >
+              Docker run
+            </button>
+            <button
+              role="tab"
+              aria-selected="false"
+              aria-controls="install-manual"
+              id="tab-manual"
+              data-install-tab="manual"
+            >
+              Manual
+            </button>
+          </div>
+          <article
+            class="install-card install-panel"
+            id="install-quick"
+            role="tabpanel"
+            aria-labelledby="tab-quick"
+            data-install-panel="quick"
+          >
+            <p class="install-label">Quick install</p>
+            <h3>Set up the host for you.</h3>
+            <p>
+              Installs dependencies and configures Termiview to start with your
+              server.
+            </p>
+            <div class="code-block">
+              <div class="code-meta">
+                <span class="code-language">bash</span
+                ><button
+                  class="copy-command"
+                  aria-label="Copy quick install command"
+                  title="Copy command"
+                  data-copy="curl -fsSL https://raw.githubusercontent.com/matonhp5108/termiview/main/install.sh | bash"
+                >
+                  <span class="copy-glyph" aria-hidden="true"></span>
+                </button>
+              </div>
+              <pre><code class="language-bash">curl -fsSL https://raw.githubusercontent.com/matonhp5108/termiview/main/install.sh | bash</code></pre>
+            </div>
+          </article>
+          <article
+            class="install-card install-panel"
+            id="install-compose"
+            role="tabpanel"
+            aria-labelledby="tab-compose"
+            data-install-panel="compose"
+            hidden
+          >
+            <p class="install-label">Docker Compose</p>
+            <h3>Recommended for a homelab.</h3>
+            <p>
+              Downloads the Compose files and detects whether the host is macOS
+              or Linux.
+            </p>
+            <div class="code-block">
+              <div class="code-meta">
+                <span class="code-language">bash</span
+                ><button
+                  class="copy-command"
+                  aria-label="Copy Docker Compose commands"
+                  title="Copy commands"
+                  data-copy="curl -o docker-compose.yml https://raw.githubusercontent.com/matonhp5108/termiview/main/docker-compose.yml&#10;curl -o start.sh https://raw.githubusercontent.com/matonhp5108/termiview/main/start.sh&#10;chmod +x start.sh&#10;./start.sh -d"
+                >
+                  <span class="copy-glyph" aria-hidden="true"></span>
+                </button>
+              </div>
+              <pre><code class="language-bash">curl -o docker-compose.yml https://raw.githubusercontent.com/matonhp5108/termiview/main/docker-compose.yml
+curl -o start.sh https://raw.githubusercontent.com/matonhp5108/termiview/main/start.sh
+chmod +x start.sh
+./start.sh -d</code></pre>
+            </div>
+          </article>
+          <article
+            class="install-card install-panel"
+            id="install-docker"
+            role="tabpanel"
+            aria-labelledby="tab-docker"
+            data-install-panel="docker"
+            hidden
+          >
+            <p class="install-label">Docker run</p>
+            <h3>Start a container directly.</h3>
+            <p>
+              Linux command shown. On macOS, replace <code>/home</code> with
+              <code>/Users</code>.
+            </p>
+            <div class="code-block">
+              <div class="code-meta">
+                <span class="code-language">bash</span
+                ><button
+                  class="copy-command"
+                  aria-label="Copy Docker run command"
+                  title="Copy command"
+                  data-copy="docker run -d --name termiview -p 3000:3000 -v /home:/app/managed/home:rw -v /var/log:/app/managed/logs:ro --restart unless-stopped phantom8015/termiview:latest"
+                >
+                  <span class="copy-glyph" aria-hidden="true"></span>
+                </button>
+              </div>
+              <pre><code class="language-bash">docker run -d \
+  --name termiview \
+  -p 3000:3000 \
+  -v /home:/app/managed/home:rw \
+  -v /var/log:/app/managed/logs:ro \
+  --restart unless-stopped \
+  phantom8015/termiview:latest</code></pre>
+            </div>
+          </article>
+          <article
+            class="install-card install-panel"
+            id="install-manual"
+            role="tabpanel"
+            aria-labelledby="tab-manual"
+            data-install-panel="manual"
+            hidden
+          >
+            <p class="install-label">Manual</p>
+            <h3>Run it yourself.</h3>
+            <p>For anyone who prefers a normal Node.js project setup.</p>
+            <div class="code-block">
+              <div class="code-meta">
+                <span class="code-language">bash</span
+                ><button
+                  class="copy-command"
+                  aria-label="Copy manual install commands"
+                  title="Copy commands"
+                  data-copy="git clone https://github.com/matonhp5108/termiview.git&#10;cd Termiview&#10;npm install &amp;&amp; npm start"
+                >
+                  <span class="copy-glyph" aria-hidden="true"></span>
+                </button>
+              </div>
+              <pre><code class="language-bash">git clone https://github.com/matonhp5108/termiview.git
+cd Termiview
+npm install && npm start</code></pre>
+            </div>
+          </article>
+        </div>
+        <p class="install-footnote">
+          Docker commands expose Termiview on port 3000. Manual setup requires
+          Node.js 16+.
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a class="wordmark" href="/">Termiview</a>
+          <p>One clear view for your homelab files and terminal.</p>
+        </div>
+        <div>
+          <h3>Product</h3>
+          <a href="#features">Features</a><a href="#install">Install</a>
+        </div>
+        <div>
+          <h3>Resources</h3>
+          <a href="https://github.com/matonhp5108/termiview">GitHub</a
+          ><a href="https://github.com/matonhp5108/termiview/issues">Issues</a
+          ><a href="https://github.com/matonhp5108/termiview/blob/main/LICENSE"
+            >License</a
+          >
+        </div>
+        <div>
+          <h3>Built for</h3>
+          <span>macOS</span><span>Linux</span><span>Your local network</span>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2026 Termiview</p>
+        <p>tung tung tung sahuur</p>
+      </div>
+    </footer>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+    <script src="landing.js"></script>
+  </body>
+</html>

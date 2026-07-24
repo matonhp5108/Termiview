@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>%%HOSTNAME%%</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="mobile-styles.css" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      rel="stylesheet"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/xterm/css/xterm.css"
+    />
+  </head>
+  <body>
+    <div class="mobile-gate">View this page on Desktop</div>
+    <div
+      id="loading-screen"
+      style="
+        position: fixed;
+        inset: 0;
+        z-index: 999999;
+        background: #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.4s ease;
+      "
+    >
+      <div
+        style="
+          width: 200px;
+          height: 3px;
+          background: rgba(255, 255, 255, 0.08);
+          border-radius: 2px;
+          overflow: hidden;
+        "
+      >
+        <div
+          id="loading-bar"
+          style="
+            width: 0%;
+            height: 100%;
+            border-radius: 2px;
+            background: rgba(var(--accent-color, 100, 160, 255), 0.8);
+            transition: width 0.3s ease;
+          "
+        ></div>
+      </div>
+    </div>
+    <div id="termiview-bg"></div>
+    <div id="app">
+      <header class="header">
+        <div class="brand" aria-label="Termiview home">
+          <span class="brand-computer" title="%%HOSTNAME%%">%%HOSTNAME%%</span>
+        </div>
+        <div class="nav-buttons">
+          <button id="back-btn" class="nav-btn" title="Back">
+            <i class="fas fa-arrow-left"></i>
+          </button>
+          <button id="forward-btn" class="nav-btn" title="Forward">
+            <i class="fas fa-arrow-right"></i>
+          </button>
+          <button id="up-btn" class="nav-btn" title="Up">
+            <i class="fas fa-arrow-up"></i>
+          </button>
+          <button id="refresh-btn" class="nav-btn" title="Refresh">
+            <i class="fas fa-sync-alt"></i>
+          </button>
+        </div>
+
+        <div class="path-bar">
+          <input type="text" id="path-input" placeholder="Enter path..." />
+        </div>
+
+        <div class="toolbar">
+          <button id="new-folder-btn" class="toolbar-btn" title="New Folder">
+            <i class="fas fa-folder-plus"></i>
+          </button>
+          <button id="upload-btn" class="toolbar-btn" title="Upload Files">
+            <i class="fas fa-upload"></i>
+          </button>
+          <button
+            id="preview-btn"
+            class="toolbar-btn"
+            title="Preview Selected File"
+            disabled
+          >
+            <i class="fas fa-eye"></i>
+          </button>
+          <button
+            id="download-btn"
+            class="toolbar-btn"
+            title="Download"
+            disabled
+          >
+            <i class="fas fa-download"></i>
+          </button>
+          <button id="copy-btn" class="toolbar-btn" title="Copy" disabled>
+            <i class="fas fa-copy"></i>
+          </button>
+          <button id="cut-btn" class="toolbar-btn" title="Cut" disabled>
+            <i class="fas fa-cut"></i>
+          </button>
+          <button id="paste-btn" class="toolbar-btn" title="Paste" disabled>
+            <i class="fas fa-paste"></i>
+          </button>
+          <button id="delete-btn" class="toolbar-btn" title="Delete" disabled>
+            <i class="fas fa-trash"></i>
+          </button>
+
+          <div
+            class="custom-sort-dropdown settings-dropdown"
+            id="settings-dropdown"
+          >
+            <button id="settings-btn" class="toolbar-btn" title="Settings">
+              <i class="fas fa-cog"></i>
+            </button>
+            <div class="custom-sort-menu settings-menu" id="settings-menu">
+              <div class="settings-row">
+                <label for="startup-path-input">Startup path</label>
+                <input
+                  id="startup-path-input"
+                  type="text"
+                  placeholder="/home/userland"
+                />
+              </div>
+              <div class="settings-row">
+                <label for="startup-command-input">Startup command</label>
+                <input
+                  id="startup-command-input"
+                  type="text"
+                  placeholder="e.g. ls -la"
+                />
+              </div>
+              <div class="settings-row">
+                <label for="terminal-font-size-input">Terminal font size</label>
+                <input
+                  id="terminal-font-size-input"
+                  type="number"
+                  min="9"
+                  max="24"
+                  step="1"
+                  value="11"
+                />
+              </div>
+              <div class="menu-separator"></div>
+              <div class="settings-color-row">
+                <label>Accent Color</label>
+                <input
+                  id="accent-color-input"
+                  type="color"
+                  value="#64a0ff"
+                  style="
+                    width: 32px;
+                    height: 32px;
+                    padding: 2px;
+                    border-radius: 50%;
+                    cursor: pointer;
+                    background: transparent;
+                    border: 2px solid rgba(255, 255, 255, 0.15);
+                  "
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="main-content">
+        <div class="file-explorer">
+          <div class="file-list-container">
+            <div class="file-list-header" id="file-list-header">
+              <div
+                class="file-list-title column-header sortable"
+                data-sort="name"
+              >
+                Files<span class="sort-indicator"></span>
+              </div>
+              <div class="column-header sortable" data-sort="size">
+                Size<span class="sort-indicator"></span>
+              </div>
+              <div class="column-header sortable" data-sort="date">
+                Date Modified<span class="sort-indicator"></span>
+              </div>
+              <div class="column-header">Permissions</div>
+            </div>
+
+            <div id="file-list" class="file-list"></div>
+
+            <div id="drop-zone" class="drop-zone">
+              <div class="drop-message">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p>Drop files here to upload</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="terminal-container-wrapper" class="terminal-container-wrapper">
+          <div
+            id="terminal-side-resize-handle"
+            aria-label="Resize terminal"
+          ></div>
+          <div class="terminal-header" id="terminal-header">
+            <div class="terminal-title">
+              <span aria-label="Terminal">&gt;_</span>
+            </div>
+            <div class="system-stats" id="system-stats">
+              <div class="stat-item" id="cpu-stat">
+                <i class="fas fa-microchip"></i>
+                <span id="cpu-load">--</span><span class="stat-unit">%</span>
+              </div>
+              <div class="stat-item" id="memory-stat">
+                <i class="fas fa-memory"></i>
+                <span id="memory-usage">--</span
+                ><span class="stat-unit">%</span>
+              </div>
+              <div class="stat-item" id="gpu-stat" style="display: none">
+                <i class="fas fa-tv"></i>
+                <span id="gpu-usage">--</span><span class="stat-unit">%</span>
+              </div>
+              <div class="stat-item" id="temp-stat" style="display: none">
+                <i class="fas fa-temperature-half"></i>
+                <span id="cpu-temp">--</span
+                ><span class="stat-unit">&deg;C</span>
+              </div>
+              <div class="stat-item" id="battery-stat" style="display: none">
+                <i class="fas fa-battery-full"></i>
+                <span id="battery-percent">--</span
+                ><span class="stat-unit">%</span>
+              </div>
+              <div class="stat-item" id="network-stat" style="display: none">
+                <i class="fas fa-network-wired"></i>
+                <span id="net-down">--</span><span class="stat-unit">KB/s</span>
+              </div>
+              <div class="stat-item" id="uptime-stat" style="display: none">
+                <i class="fas fa-clock"></i>
+                <span id="uptime-display">--</span>
+              </div>
+            </div>
+            <div class="terminal-controls">
+              <div class="layout-switcher">
+                <button
+                  id="terminal-layout-btn"
+                  class="panel-popout-btn"
+                  title="Change terminal position"
+                >
+                  <i class="fas fa-expand"></i>
+                </button>
+                <div
+                  class="layout-menu"
+                  role="menu"
+                  aria-label="Terminal position"
+                >
+                  <button data-terminal-layout="integrated" role="menuitem">
+                    <i class="fas fa-grip-lines"></i>Bottom panel
+                  </button>
+                  <button data-terminal-layout="dock-right" role="menuitem">
+                    <i class="fas fa-table-columns"></i>Right side
+                  </button>
+                  <button data-terminal-layout="dock-left" role="menuitem">
+                    <i class="fas fa-table-columns fa-flip-horizontal"></i>Left
+                    side
+                  </button>
+                  <button data-terminal-layout="floating" role="menuitem">
+                    <i class="fas fa-up-right-and-down-left-from-center"></i
+                    >Floating
+                  </button>
+                  <button data-terminal-layout="terminal-only" role="menuitem">
+                    <i class="fas fa-expand"></i>Fullscreen terminal
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="terminal-container" class="xterm-glassy"></div>
+        </div>
+      </div>
+
+      <div id="context-menu" class="context-menu hidden">
+        <div class="context-item" data-action="preview">
+          <i class="fas fa-eye"></i> Preview
+        </div>
+        <div class="context-item separator"></div>
+        <div class="context-item" data-action="new-folder">
+          <i class="fas fa-folder-plus"></i> New Folder
+        </div>
+        <div class="context-item" data-action="new-file">
+          <i class="fas fa-file-circle-plus"></i> New File
+        </div>
+        <div class="context-item separator"></div>
+        <div class="context-item" data-action="copy">
+          <i class="fas fa-copy"></i> Copy
+        </div>
+        <div class="context-item" data-action="cut">
+          <i class="fas fa-cut"></i> Cut
+        </div>
+        <div class="context-item" data-action="paste">
+          <i class="fas fa-paste"></i> Paste
+        </div>
+        <div class="context-item separator"></div>
+        <div class="context-item" data-action="rename">
+          <i class="fas fa-pencil-alt"></i> Rename
+        </div>
+        <div class="context-item" data-action="delete">
+          <i class="fas fa-trash"></i> Delete
+        </div>
+        <div class="context-item separator"></div>
+        <div class="context-item" data-action="properties">
+          <i class="fas fa-info-circle"></i> Properties
+        </div>
+      </div>
+
+      <div id="editor-modal" class="modal hidden">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 id="editor-title">Edit File</h3>
+            <button class="modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <textarea id="file-editor" placeholder="File content..."></textarea>
+          </div>
+          <div class="modal-footer">
+            <button id="save-file-btn" class="btn btn-primary">Save</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="properties-modal" class="modal hidden">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Properties</h3>
+            <button class="modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div id="properties-content"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="preview-modal" class="modal hidden">
+        <div class="modal-content modal-large">
+          <div class="modal-header">
+            <h3 id="preview-title">File Preview</h3>
+            <div class="modal-header-right">
+              <div
+                id="preview-actions"
+                style="display: flex; gap: 8px; align-items: center"
+              >
+                <button
+                  id="preview-download-btn"
+                  class="btn btn-sm btn-secondary"
+                  title="Download File"
+                >
+                  <i class="fas fa-download"></i>
+                </button>
+                <button
+                  id="preview-edit-btn"
+                  class="btn btn-sm btn-secondary"
+                  title="Edit File"
+                >
+                  <i class="fas fa-edit"></i>
+                </button>
+              </div>
+              <button class="modal-close">&times;</button>
+            </div>
+          </div>
+          <div class="modal-body">
+            <div id="preview-content"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="loading" class="loading hidden">
+        <div class="spinner"></div>
+      </div>
+
+      <div id="notifications" class="notifications"></div>
+
+      <div id="upload-progress" class="upload-progress hidden">
+        <div class="upload-progress-header">
+          <div class="upload-progress-title">Uploading Files</div>
+          <button id="upload-cancel-btn" class="upload-cancel-btn">
+            Cancel
+          </button>
+        </div>
+        <div id="upload-files-list" class="upload-files-list"></div>
+        <div class="upload-overall-progress">
+          <div id="upload-overall-text" class="upload-overall-text">
+            Preparing upload...
+          </div>
+          <div class="upload-progress-bar">
+            <div class="upload-progress-fill" id="upload-overall-fill"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <input type="file" id="file-input" multiple style="display: none" />
+
+    <input
+      type="file"
+      id="settings-import-input"
+      accept=".json"
+      style="display: none"
+    />
+
+    <script src="https://cdn.jsdelivr.net/npm/xterm/lib/xterm.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit/lib/xterm-addon-fit.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script src="script.js"></script>
+
+    <script>
+      (function () {
+        const bar = document.getElementById("loading-bar");
+        const screen = document.getElementById("loading-screen");
+        if (!bar || !screen) return;
+
+        let progress = 0;
+        const resources = document.querySelectorAll(
+          'link[rel="stylesheet"], script[src]',
+        );
+        const total = resources.length + 1;
+        let loaded = 0;
+
+        function tick() {
+          loaded++;
+          progress = Math.min(95, (loaded / total) * 100);
+          bar.style.width = progress + "%";
+        }
+
+        resources.forEach((el) => {
+          if (el.complete || el.sheet) {
+            tick();
+            return;
+          }
+          el.addEventListener("load", tick);
+          el.addEventListener("error", tick);
+        });
+
+        function finish() {
+          bar.style.width = "100%";
+          setTimeout(() => {
+            screen.style.opacity = "0";
+            setTimeout(() => screen.remove(), 400);
+          }, 200);
+        }
+
+        if (document.readyState === "complete") {
+          finish();
+        } else {
+          window.addEventListener("load", finish);
+        }
+      })();
+    </script>
+  </body>
+</html>

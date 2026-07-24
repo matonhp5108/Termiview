@@ -1,0 +1,66 @@
+version: '1.0'
+
+services:
+  termiview:
+    image: phantom8015/termiview:latest
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+    
+    
+    container_name: termiview
+    ports:
+      - "3000:3000"
+    volumes:
+      - ${HOST_HOME}:/app/managed/home:rw
+      - ${HOST_LOGS:-/var/log}:/app/managed/logs:ro
+      - termiview_data:/app/data
+      
+      
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - WATCHTOWER_UPDATE_URL=http://watchtower:8080/v1/update
+      - WATCHTOWER_UPDATE_TOKEN=${WATCHTOWER_UPDATE_TOKEN}
+    restart: unless-stopped
+    
+    security_opt:
+      - no-new-privileges:true
+    
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1'
+    
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/ping', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: termiview-updater
+    command: --label-enable --cleanup --interval 300 --http-api-update --http-api-periodic-polls
+    environment:
+      - WATCHTOWER_HTTP_API_TOKEN=${WATCHTOWER_UPDATE_TOKEN}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+    labels:
+      com.centurylinklabs.watchtower.enable: "false"
+
+volumes:
+  termiview_data:
+
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
