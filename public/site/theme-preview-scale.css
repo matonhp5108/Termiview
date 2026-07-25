@@ -1,2 +1,20 @@
-.preview-stage{--preview-scale:1;position:relative;overflow:hidden;height:410px;border:1px solid #2b3b57;background:#090b11;box-shadow:0 22px 60px rgba(0,0,0,.25)}
-.preview-stage .app-preview{position:absolute;top:0;left:0;display:block;width:1180px;height:760px;border:0;transform:scale(var(--preview-scale));transform-origin:top left}
+.preview-stage {
+  --preview-scale: 1;
+  position: relative;
+  overflow: hidden;
+  height: 410px;
+  border: 1px solid #2b3b57;
+  background: #090b11;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.25);
+}
+.preview-stage .app-preview {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 1180px;
+  height: 760px;
+  border: 0;
+  transform: scale(var(--preview-scale));
+  transform-origin: top left;
+}
