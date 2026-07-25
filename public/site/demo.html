@@ -1,3 +1,65 @@
 <!doctype html>
-<html lang="en"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Termiview demo</title><link rel="stylesheet" href="demo.css" /></head>
-<body><main class="demo"><header><strong>termiview</strong><div class="path">/home/evaan/projects</div><span>⌘</span><span>⚙</span></header><section class="workspace"><aside><p>FILES</p><div class="file active">▾ projects</div><div class="file indent">▸ theme-editor</div><div class="file">▤ notes.md</div><div class="file">◫ server.log</div><div class="file">▧ README.md</div></aside><section class="terminal"><div class="terminal-bar"><span>terminal</span><span>− □ ×</span></div><div class="terminal-copy"><p><b>Theme text preview</b></p><p><span class="primary">Primary text</span> &nbsp; <span class="muted">Muted text</span> &nbsp; <span class="accent">Accent text</span></p><p><span class="success">Success</span> &nbsp; <span class="warning">Warning</span> &nbsp; <span class="error">Error</span></p><p><span class="muted">$</span> theme preview ready<span class="cursor"></span></p></div></section></section></main><script src="demo.js"></script></body></html>
+<html lang="en" data-custom-theme="true">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Termiview preview</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="../theme-overrides.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="demo.css" />
+  </head>
+  <body>
+    <div id="termiview-bg"></div>
+    <div id="app" class="demo-app" data-layout="dock-right">
+      <header class="header">
+        <div class="brand"><span class="brand-computer">evaan</span></div>
+        <div class="nav-buttons" aria-hidden="true">
+          <button class="nav-btn"><i class="fas fa-arrow-left"></i></button>
+          <button class="nav-btn"><i class="fas fa-arrow-right"></i></button>
+          <button class="nav-btn"><i class="fas fa-arrow-up"></i></button>
+          <button class="nav-btn"><i class="fas fa-sync-alt"></i></button>
+        </div>
+        <div class="path-bar"><input value="/home/evaan/projects" readonly tabindex="-1" /></div>
+        <div class="toolbar" aria-hidden="true">
+          <button class="toolbar-btn"><i class="fas fa-folder-plus"></i></button>
+          <button class="toolbar-btn"><i class="fas fa-upload"></i></button>
+          <button class="toolbar-btn"><i class="fas fa-eye"></i></button>
+          <button class="toolbar-btn"><i class="fas fa-download"></i></button>
+          <button class="toolbar-btn"><i class="fas fa-copy"></i></button>
+          <button class="toolbar-btn"><i class="fas fa-cut"></i></button>
+          <button class="toolbar-btn"><i class="fas fa-paste"></i></button>
+          <button class="toolbar-btn"><i class="fas fa-trash"></i></button>
+          <button class="toolbar-btn"><i class="fas fa-cog"></i></button>
+        </div>
+      </header>
+
+      <main class="main-content">
+        <section class="file-explorer">
+          <div class="file-list-container">
+            <div class="file-list-header">
+              <div class="file-list-title column-header sortable sort-active">Files<span class="sort-indicator"></span></div>
+              <div class="column-header">Size</div><div class="column-header">Date Modified</div><div class="column-header">Permissions</div>
+            </div>
+            <div class="file-list">
+              <div class="file-item selected"><div class="file-name"><i class="fas fa-folder folder"></i><span>projects</span></div><div class="file-size">—</div><div class="file-date">Today, 2:41 PM</div><div class="file-permissions">drwxr-xr-x</div></div>
+              <div class="file-item"><div class="file-name"><i class="fas fa-folder folder"></i><span>termiview</span></div><div class="file-size">—</div><div class="file-date">Today, 1:12 PM</div><div class="file-permissions">drwxr-xr-x</div></div>
+              <div class="file-item"><div class="file-name"><i class="fas fa-file-code file"></i><span>README.md</span></div><div class="file-size">4.2 KB</div><div class="file-date">Yesterday, 9:18 PM</div><div class="file-permissions">-rw-r--r--</div></div>
+              <div class="file-item"><div class="file-name"><i class="fas fa-file-code file"></i><span>server.js</span></div><div class="file-size">12.8 KB</div><div class="file-date">Jul 23, 4:06 PM</div><div class="file-permissions">-rw-r--r--</div></div>
+              <div class="file-item"><div class="file-name"><i class="fas fa-file-lines file"></i><span>notes.txt</span></div><div class="file-size">926 B</div><div class="file-date">Jul 21, 11:30 AM</div><div class="file-permissions">-rw-r--r--</div></div>
+            </div>
+          </div>
+        </section>
+        <section class="terminal-container-wrapper">
+          <div class="terminal-header">
+            <div class="terminal-title"><span>&gt;_</span></div>
+            <div class="terminal-controls"><button class="panel-popout-btn" aria-hidden="true"><i class="fas fa-expand"></i></button></div>
+          </div>
+          <div class="xterm-glassy"><div id="terminal-content"><span class="terminal-muted">evaan@termiview</span>:<span class="terminal-path">~/projects</span>$ theme preview<br /><br /><span class="terminal-primary">Primary text</span><br /><span class="terminal-muted">Muted text</span><br /><span class="terminal-accent">Accent text</span><br /><span class="terminal-success">✓ Success message</span><br /><span class="terminal-warning">! Warning message</span><br /><span class="terminal-error">× Error message</span><br /><br /><span class="terminal-muted">evaan@termiview</span>:<span class="terminal-path">~/projects</span>$ <span class="terminal-cursor"></span></div></div>
+        </section>
+      </main>
+      <div class="system-stats" id="system-stats"><div class="stat-item" id="cpu-stat"><i class="fas fa-microchip"></i><span>12</span><span class="stat-unit">%</span></div><div class="stat-item" id="memory-stat"><i class="fas fa-memory"></i><span>36</span><span class="stat-unit">%</span></div></div>
+    </div>
+    <script src="demo.js"></script>
+  </body>
+</html>
