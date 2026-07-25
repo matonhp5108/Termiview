@@ -12,93 +12,6 @@ let isResizing = false;
 const isThemePreview = new URLSearchParams(window.location.search).has(
   "theme-preview",
 );
-const isDemo = window.__TERMIVIEW_DEMO__ === true;
-const demoModified = "2026-07-25T12:00:00.000Z";
-const demoDirectories = {
-  "/home/demo/projects": [
-    ["termiview", true, 4096],
-    ["design-notes.md", false, 4820],
-    ["server.log", false, 12483],
-    ["README.md", false, 2714],
-  ],
-  "/home/demo/projects/termiview": [
-    ["public", true, 4096],
-    ["server.js", false, 18342],
-    ["package.json", false, 958],
-  ],
-  "/home/demo/projects/termiview/public": [
-    ["index.html", false, 7241],
-    ["script.js", false, 89531],
-    ["styles.css", false, 42518],
-  ],
-};
-
-function demoResponse(body, status = 200) {
-  return Promise.resolve(
-    new Response(JSON.stringify(body), {
-      status,
-      headers: { "Content-Type": "application/json" },
-    }),
-  );
-}
-
-if (isDemo) {
-  window.fetch = (resource, options) => {
-    const url = new URL(
-      typeof resource === "string" ? resource : resource?.url,
-      window.location.origin,
-    );
-    if (!url.pathname.startsWith("/api/")) {
-      return Promise.reject(
-        new Error("The static demo only includes mock data."),
-      );
-    }
-
-    if (url.pathname === "/api/files") {
-      const currentPath = url.searchParams.get("path") || "/home/demo/projects";
-      const entries = demoDirectories[currentPath];
-      if (!entries)
-        return demoResponse({ error: "Demo directory not found" }, 404);
-      return demoResponse({
-        currentPath,
-        parent: currentPath.split("/").slice(0, -1).join("/") || "/",
-        files: entries.map(([name, isDirectory, size]) => ({
-          name,
-          path: `${currentPath}/${name}`,
-          isDirectory,
-          size,
-          modified: demoModified,
-          permissions: isDirectory ? 0o755 : 0o644,
-        })),
-      });
-    }
-
-    if (url.pathname === "/api/system-stats") {
-      return demoResponse({
-        cpu: { load: 24, cores: 8, speed: 3.2, temp: 48 },
-        memory: { used: 7.8, total: 16, percentage: 49, free: 8.2 },
-        disk: { used: 112, total: 512, percentage: 22 },
-        network: { down: 84, up: 16, iface: "en0" },
-        uptime: 345600,
-        os: { platform: "darwin", hostname: "Termiview demo" },
-      });
-    }
-
-    if (url.pathname === "/api/file-content") {
-      const fileName =
-        url.searchParams.get("path")?.split("/").pop() || "demo file";
-      return demoResponse({
-        type: "text",
-        mimeType: "text/plain",
-        fileName,
-        size: 0,
-        content: `# ${fileName}\n\nThis is hardcoded mock data in the static Termiview demo.`,
-      });
-    }
-
-    return demoResponse({ error: "The static demo cannot change files." }, 403);
-  };
-}
 
 function openTerminal() {
   try {
@@ -203,7 +116,7 @@ function openTerminal() {
     }
 
     if (termSocket) termSocket.close();
-    if (isThemePreview || isDemo) {
+    if (isThemePreview) {
       const theme = window.settingsManager?.settings?.customTheme;
       if (theme) {
         terminal.options.theme = {
@@ -587,7 +500,6 @@ class FileExplorer {
 
   watchCurrentPath() {
     if (this.liveFileSource) this.liveFileSource.close();
-    if (isDemo) return;
     this.liveFileSource = new EventSource(
       `/api/live-files?path=${encodeURIComponent(this.currentPath)}`,
     );

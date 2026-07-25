@@ -433,20 +433,6 @@
     <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit/lib/xterm-addon-fit.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <script>
-      (function () {
-        if (!new URLSearchParams(window.location.search).has("demo")) return;
-        window.__TERMIVIEW_DEMO__ = true;
-        window.__TERMIVIEW_DEFAULT_PATH__ = "/home/demo/projects";
-        document.documentElement.dataset.demo = "true";
-        document.title = "Termiview demo";
-        document.querySelectorAll(".brand-computer").forEach((brand) => {
-          brand.textContent = "Termiview demo";
-          brand.title = "Termiview demo";
-        });
-        document.getElementById("app")?.setAttribute("inert", "");
-      })();
-    </script>
     <script src="script.js"></script>
 
     <script>

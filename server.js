@@ -134,6 +134,10 @@ async function serveTermiview(req, res) {
 app.get("/", serveTermiview);
 
 app.get("/site", (req, res) => {
+  res.redirect(308, "/site/");
+});
+
+app.get("/site/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "site", "index.html"));
 });
 

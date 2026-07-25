@@ -68,14 +68,6 @@
   display: none !important;
 }
 
-html[data-demo="true"] #app {
-  pointer-events: none;
-}
-
-html[data-demo="true"] .notifications {
-  display: none !important;
-}
-
 #termiview-bg {
   position: fixed;
   inset: -20vh;

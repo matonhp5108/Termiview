@@ -1,6 +1,6 @@
 {
   "name": "termiview",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Termiview - A powerful web-based file explorer with terminal integration and system monitoring",
   "main": "server.js",
   "scripts": {
