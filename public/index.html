@@ -6,6 +6,7 @@
     <title>%%HOSTNAME%%</title>
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="mobile-styles.css" />
+    <link rel="stylesheet" href="theme-overrides.css" />
     <link
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
       rel="stylesheet"
@@ -165,6 +166,24 @@
                     border: 2px solid rgba(255, 255, 255, 0.15);
                   "
                 />
+              </div>
+              <div class="menu-separator"></div>
+              <div class="settings-row theme-settings-row">
+                <label>Custom theme</label>
+                <p id="custom-theme-status" class="settings-help">
+                  Using the default theme.
+                </p>
+                <div class="theme-actions">
+                  <button id="load-custom-theme-btn" type="button">
+                    Load theme
+                  </button>
+                  <button id="clear-custom-theme-btn" type="button">
+                    Reset
+                  </button>
+                </div>
+                <a class="theme-editor-link" href="/site/theme-editor.html"
+                  >Create a theme ↗</a
+                >
               </div>
             </div>
           </div>
@@ -405,8 +424,8 @@
 
     <input
       type="file"
-      id="settings-import-input"
-      accept=".json"
+      id="custom-theme-input"
+      accept="application/json,.json"
       style="display: none"
     />
 
@@ -414,6 +433,20 @@
     <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit/lib/xterm-addon-fit.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <script>
+      (function () {
+        if (!new URLSearchParams(window.location.search).has("demo")) return;
+        window.__TERMIVIEW_DEMO__ = true;
+        window.__TERMIVIEW_DEFAULT_PATH__ = "/home/demo/projects";
+        document.documentElement.dataset.demo = "true";
+        document.title = "Termiview demo";
+        document.querySelectorAll(".brand-computer").forEach((brand) => {
+          brand.textContent = "Termiview demo";
+          brand.title = "Termiview demo";
+        });
+        document.getElementById("app")?.setAttribute("inert", "");
+      })();
+    </script>
     <script src="script.js"></script>
 
     <script>

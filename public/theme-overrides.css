@@ -1,0 +1,97 @@
+html[data-custom-theme="true"] body,
+html[data-custom-theme="true"] #termiview-bg {
+  background: var(--bg-primary) !important;
+}
+html[data-custom-theme="true"] .header,
+html[data-custom-theme="true"] .file-list-container,
+html[data-custom-theme="true"] .terminal-container-wrapper,
+html[data-custom-theme="true"] .xterm-glassy {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-primary) !important;
+}
+html[data-custom-theme="true"] .file-list-header,
+html[data-custom-theme="true"] .terminal-header,
+html[data-custom-theme="true"] .context-menu,
+html[data-custom-theme="true"] .custom-sort-menu,
+html[data-custom-theme="true"] .modal-content {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-primary) !important;
+}
+html[data-custom-theme="true"] .file-item,
+html[data-custom-theme="true"] .file-list,
+html[data-custom-theme="true"] .file-explorer,
+html[data-custom-theme="true"] .main-content {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+html[data-custom-theme="true"] .file-item:hover,
+html[data-custom-theme="true"] .custom-sort-item:hover,
+html[data-custom-theme="true"] .context-item:hover {
+  background: var(--bg-hover) !important;
+}
+html[data-custom-theme="true"] .file-item.selected,
+html[data-custom-theme="true"] .custom-sort-item.selected {
+  background: var(--bg-selected) !important;
+}
+html[data-custom-theme="true"] input,
+html[data-custom-theme="true"] textarea,
+html[data-custom-theme="true"] select {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-primary) !important;
+}
+html[data-custom-theme="true"] .file-size,
+html[data-custom-theme="true"] .file-date,
+html[data-custom-theme="true"] .file-permissions,
+html[data-custom-theme="true"] .column-header,
+html[data-custom-theme="true"] .stat-item {
+  color: var(--text-secondary) !important;
+}
+
+/* The compact app chrome has late, fixed-color rules; theme it explicitly. */
+html[data-custom-theme="true"] .brand,
+html[data-custom-theme="true"] .brand-computer,
+html[data-custom-theme="true"] .terminal-title {
+  color: var(--text-primary) !important;
+}
+
+html[data-custom-theme="true"] .nav-buttons,
+html[data-custom-theme="true"] .toolbar {
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+html[data-custom-theme="true"] .nav-btn,
+html[data-custom-theme="true"] .toolbar-btn,
+html[data-custom-theme="true"] .panel-popout-btn {
+  background: transparent !important;
+  border-color: transparent !important;
+  color: var(--text-secondary) !important;
+}
+
+html[data-custom-theme="true"] .nav-btn:hover,
+html[data-custom-theme="true"] .toolbar-btn:hover,
+html[data-custom-theme="true"] .panel-popout-btn:hover {
+  background: transparent !important;
+  border-color: transparent !important;
+  color: #fff !important;
+}
+
+html[data-custom-theme="true"] .path-bar {
+  background: var(--bg-tertiary) !important;
+  border-color: var(--border-primary) !important;
+}
+
+html[data-custom-theme="true"] #system-stats.system-stats {
+  background: var(--bg-secondary) !important;
+  border-color: var(--border-primary) !important;
+  color: var(--text-secondary) !important;
+}
+
+html[data-custom-theme="true"] #system-stats::before,
+html[data-custom-theme="true"] #system-stats .stat-item + .stat-item::before,
+html[data-custom-theme="true"] #system-stats .stat-unit {
+  color: var(--text-muted, var(--text-secondary)) !important;
+}

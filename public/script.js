@@ -9,6 +9,96 @@ let terminal,
   terminalVisible = true;
 let terminalFontSize = 11;
 let isResizing = false;
+const isThemePreview = new URLSearchParams(window.location.search).has(
+  "theme-preview",
+);
+const isDemo = window.__TERMIVIEW_DEMO__ === true;
+const demoModified = "2026-07-25T12:00:00.000Z";
+const demoDirectories = {
+  "/home/demo/projects": [
+    ["termiview", true, 4096],
+    ["design-notes.md", false, 4820],
+    ["server.log", false, 12483],
+    ["README.md", false, 2714],
+  ],
+  "/home/demo/projects/termiview": [
+    ["public", true, 4096],
+    ["server.js", false, 18342],
+    ["package.json", false, 958],
+  ],
+  "/home/demo/projects/termiview/public": [
+    ["index.html", false, 7241],
+    ["script.js", false, 89531],
+    ["styles.css", false, 42518],
+  ],
+};
+
+function demoResponse(body, status = 200) {
+  return Promise.resolve(
+    new Response(JSON.stringify(body), {
+      status,
+      headers: { "Content-Type": "application/json" },
+    }),
+  );
+}
+
+if (isDemo) {
+  window.fetch = (resource, options) => {
+    const url = new URL(
+      typeof resource === "string" ? resource : resource?.url,
+      window.location.origin,
+    );
+    if (!url.pathname.startsWith("/api/")) {
+      return Promise.reject(
+        new Error("The static demo only includes mock data."),
+      );
+    }
+
+    if (url.pathname === "/api/files") {
+      const currentPath = url.searchParams.get("path") || "/home/demo/projects";
+      const entries = demoDirectories[currentPath];
+      if (!entries)
+        return demoResponse({ error: "Demo directory not found" }, 404);
+      return demoResponse({
+        currentPath,
+        parent: currentPath.split("/").slice(0, -1).join("/") || "/",
+        files: entries.map(([name, isDirectory, size]) => ({
+          name,
+          path: `${currentPath}/${name}`,
+          isDirectory,
+          size,
+          modified: demoModified,
+          permissions: isDirectory ? 0o755 : 0o644,
+        })),
+      });
+    }
+
+    if (url.pathname === "/api/system-stats") {
+      return demoResponse({
+        cpu: { load: 24, cores: 8, speed: 3.2, temp: 48 },
+        memory: { used: 7.8, total: 16, percentage: 49, free: 8.2 },
+        disk: { used: 112, total: 512, percentage: 22 },
+        network: { down: 84, up: 16, iface: "en0" },
+        uptime: 345600,
+        os: { platform: "darwin", hostname: "Termiview demo" },
+      });
+    }
+
+    if (url.pathname === "/api/file-content") {
+      const fileName =
+        url.searchParams.get("path")?.split("/").pop() || "demo file";
+      return demoResponse({
+        type: "text",
+        mimeType: "text/plain",
+        fileName,
+        size: 0,
+        content: `# ${fileName}\n\nThis is hardcoded mock data in the static Termiview demo.`,
+      });
+    }
+
+    return demoResponse({ error: "The static demo cannot change files." }, 403);
+  };
+}
 
 function openTerminal() {
   try {
@@ -113,6 +203,39 @@ function openTerminal() {
     }
 
     if (termSocket) termSocket.close();
+    if (isThemePreview || isDemo) {
+      const theme = window.settingsManager?.settings?.customTheme;
+      if (theme) {
+        terminal.options.theme = {
+          ...terminal.options.theme,
+          foreground: theme.text,
+          cursor: theme.accent,
+          cursorAccent: theme.background,
+          black: theme.background,
+          white: theme.text,
+          brightWhite: theme.text,
+          brightBlack: theme.textMuted,
+          blue: theme.accent,
+          brightBlue: theme.accent,
+          green: theme.success || "#4caf50",
+          brightGreen: theme.success || "#4caf50",
+          yellow: theme.warning || "#ffcb6b",
+          brightYellow: theme.warning || "#ffcb6b",
+          red: theme.error || "#ff5370",
+          brightRed: theme.error || "#ff5370",
+        };
+      }
+      terminal.write("\x1b[1mTheme text preview\x1b[0m\r\n\r\n");
+      terminal.write(
+        "\x1b[37mPrimary text\x1b[0m  \x1b[90mMuted text\x1b[0m  \x1b[34mAccent text\x1b[0m\r\n",
+      );
+      terminal.write(
+        "\x1b[32mSuccess\x1b[0m  \x1b[33mWarning\x1b[0m  \x1b[31mError\x1b[0m\r\n\r\n",
+      );
+      terminal.write("\x1b[90m$\x1b[0m theme preview ready\r\n");
+      return;
+    }
+
     const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     termSocket = new WebSocket(
       `${wsProtocol}//${window.location.host}/terminal`,
@@ -464,6 +587,7 @@ class FileExplorer {
 
   watchCurrentPath() {
     if (this.liveFileSource) this.liveFileSource.close();
+    if (isDemo) return;
     this.liveFileSource = new EventSource(
       `/api/live-files?path=${encodeURIComponent(this.currentPath)}`,
     );
@@ -2376,13 +2500,14 @@ class SettingsManager {
       startupPath: window.__TERMIVIEW_DEFAULT_PATH__ || "/",
       startupCommand: "",
       accentColor: "#bdd6ff",
+      customTheme: null,
     };
 
     this.currentFiles = [];
 
     this.loadSettings();
     this.initializeUI();
-    this.initializeReleaseNotifications();
+    if (!isThemePreview) this.initializeReleaseNotifications();
   }
 
   async checkForReleaseUpdate() {
@@ -2453,7 +2578,7 @@ class SettingsManager {
   }
 
   applySettings(options = {}) {
-    this.applyAccentColor();
+    this.applyTheme();
 
     if (options.applyLayout !== false) {
       this.applyLayout();
@@ -2471,6 +2596,10 @@ class SettingsManager {
     const rgb = this.hexToRgb(accentColor);
     if (rgb) {
       document.documentElement.style.setProperty(
+        "--accent-color",
+        `${rgb.r}, ${rgb.g}, ${rgb.b}`,
+      );
+      document.documentElement.style.setProperty(
         "--file-icon-color",
         `${rgb.r}, ${rgb.g}, ${rgb.b}`,
       );
@@ -2480,6 +2609,105 @@ class SettingsManager {
     if (colorInput && colorInput.value !== accentColor) {
       colorInput.value = accentColor;
     }
+  }
+
+  applyTheme() {
+    const theme = this.settings.customTheme;
+    const root = document.documentElement;
+    root.dataset.customTheme = theme ? "true" : "false";
+    const variables = {
+      "--bg-primary": theme?.background,
+      "--bg-secondary": theme?.surface,
+      "--bg-tertiary": theme?.surfaceRaised,
+      "--bg-hover": theme?.hover,
+      "--bg-selected": theme?.selected,
+      "--text-primary": theme?.text,
+      "--text-secondary": theme?.textMuted,
+      "--text-tertiary": theme?.textMuted,
+      "--border-primary": theme?.border,
+      "--border-secondary": theme?.border,
+      "--glass-bg": theme?.surface,
+      "--glass-bg-hover": theme?.hover,
+      "--glass-border": theme?.border,
+      "--glass-border-hover": theme?.accent,
+      "--success": theme?.success,
+      "--warning": theme?.warning,
+      "--error": theme?.error,
+      "--gradient-1": theme ? `${this.hexToRgba(theme.accent, 0.28)}` : null,
+      "--gradient-2": theme ? `${this.hexToRgba(theme.accent, 0.2)}` : null,
+      "--gradient-3": theme ? `${this.hexToRgba(theme.accent, 0.16)}` : null,
+      "--gradient-4": theme ? `${this.hexToRgba(theme.accent, 0.12)}` : null,
+      "--gradient-5": theme ? `${this.hexToRgba(theme.accent, 0.08)}` : null,
+    };
+    Object.entries(variables).forEach(([name, value]) => {
+      if (value) root.style.setProperty(name, value);
+      else root.style.removeProperty(name);
+    });
+
+    if (theme?.background) {
+      document.body.style.background = theme.background;
+      const appBackground = document.getElementById("termiview-bg");
+      if (appBackground) appBackground.style.background = theme.background;
+    } else {
+      document.body.style.removeProperty("background");
+      document
+        .getElementById("termiview-bg")
+        ?.style.removeProperty("background");
+    }
+    if (theme?.accent) this.settings.accentColor = theme.accent;
+    this.applyAccentColor();
+
+    if (terminal && theme) {
+      terminal.options.theme = {
+        ...terminal.options.theme,
+        foreground: theme.text,
+        cursor: theme.accent,
+        cursorAccent: theme.background,
+        black: theme.background,
+        white: theme.text,
+        brightWhite: theme.text,
+        brightBlack: theme.textMuted,
+        blue: theme.accent,
+        brightBlue: theme.accent,
+        green: theme.success || "#4caf50",
+        brightGreen: theme.success || "#4caf50",
+        yellow: theme.warning || "#ffcb6b",
+        brightYellow: theme.warning || "#ffcb6b",
+        red: theme.error || "#ff5370",
+        brightRed: theme.error || "#ff5370",
+      };
+    }
+  }
+
+  hexToRgba(hex, alpha) {
+    const rgb = this.hexToRgb(hex);
+    return rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})` : "";
+  }
+
+  setCustomTheme(theme, { persist = true } = {}) {
+    const required = [
+      "name",
+      "background",
+      "surface",
+      "surfaceRaised",
+      "hover",
+      "selected",
+      "text",
+      "textMuted",
+      "border",
+      "accent",
+    ];
+    if (
+      !theme ||
+      typeof theme !== "object" ||
+      required.some((key) => typeof theme[key] !== "string")
+    ) {
+      throw new Error("This is not a valid Termiview theme file.");
+    }
+    this.settings.customTheme = { ...theme, version: 1 };
+    this.settings.accentColor = theme.accent;
+    if (persist) this.saveSettings({ applyLayout: false });
+    else this.applySettings({ applyLayout: false });
   }
 
   applyLayout() {
@@ -3298,6 +3526,49 @@ class SettingsManager {
       });
     }
 
+    const themeInput = document.getElementById("custom-theme-input");
+    const loadThemeButton = document.getElementById("load-custom-theme-btn");
+    const clearThemeButton = document.getElementById("clear-custom-theme-btn");
+    const themeStatus = document.getElementById("custom-theme-status");
+    const updateThemeStatus = () => {
+      if (!themeStatus) return;
+      themeStatus.textContent = this.settings.customTheme
+        ? `Loaded: ${this.settings.customTheme.name}`
+        : "Using the default theme.";
+    };
+    loadThemeButton?.addEventListener("click", () => themeInput?.click());
+    themeInput?.addEventListener("change", async () => {
+      const file = themeInput.files?.[0];
+      if (!file) return;
+      try {
+        this.setCustomTheme(JSON.parse(await file.text()));
+        if (accentColorInput)
+          accentColorInput.value = this.settings.accentColor;
+        updateThemeStatus();
+        window.fileExplorer?.showNotification?.(
+          "Custom theme loaded.",
+          "success",
+        );
+      } catch (error) {
+        window.fileExplorer?.showNotification?.(
+          error.message || "Could not load theme.",
+          "error",
+        );
+      } finally {
+        themeInput.value = "";
+      }
+    });
+    clearThemeButton?.addEventListener("click", () => {
+      this.settings.customTheme = null;
+      this.saveSettings({ applyLayout: false });
+      updateThemeStatus();
+      window.fileExplorer?.showNotification?.(
+        "Theme reset to default.",
+        "info",
+      );
+    });
+    updateThemeStatus();
+
     const presetContainer = document.getElementById("accent-presets");
     if (presetContainer) {
       presetContainer.addEventListener("click", (e) => {
@@ -3346,9 +3617,21 @@ document.addEventListener("DOMContentLoaded", () => {
       const pathInput = document.getElementById("path-input");
       if (pathInput) pathInput.value = startupPath;
 
-      setTimeout(() => {
-        openTerminal();
-      }, 600);
+      if (!isThemePreview) {
+        setTimeout(() => {
+          openTerminal();
+        }, 600);
+      }
     }
   } catch (_) {}
+
+  window.addEventListener("message", (event) => {
+    if (event.origin !== window.location.origin || !event.data?.themePreview)
+      return;
+    try {
+      settingsManager.setCustomTheme(event.data.themePreview, {
+        persist: false,
+      });
+    } catch (_) {}
+  });
 });

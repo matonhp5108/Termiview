@@ -68,6 +68,14 @@
   display: none !important;
 }
 
+html[data-demo="true"] #app {
+  pointer-events: none;
+}
+
+html[data-demo="true"] .notifications {
+  display: none !important;
+}
+
 #termiview-bg {
   position: fixed;
   inset: -20vh;
@@ -882,6 +890,34 @@ select:focus {
   border: 2px solid rgba(255, 255, 255, 0.15);
 }
 
+.settings-help {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.theme-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.theme-actions button {
+  padding: 7px 8px;
+}
+
+.theme-editor-link {
+  color: var(--text-secondary);
+  font-size: 11px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.theme-editor-link:hover {
+  color: var(--text-primary);
+}
+
 .update-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1402,10 +1438,10 @@ body,
 .nav-buttons,
 .toolbar {
   gap: 2px;
-  padding: 3px;
-  border: 1px solid #202020;
-  border-radius: 999px;
-  background: #0d0d0d;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 .nav-buttons {
   padding-left: 3px;
@@ -1468,7 +1504,7 @@ body,
 .toolbar-btn {
   width: 32px;
   height: 32px;
-  border-radius: 50%;
+  border-radius: var(--radius-sm);
   background: transparent;
   border-color: transparent;
   transition:
@@ -1479,6 +1515,9 @@ body,
 .toolbar-btn:hover,
 .nav-btn:active,
 .toolbar-btn:active {
+  background: transparent;
+  border-color: transparent;
+  color: #fff;
   transform: none !important;
 }
 .path-bar {
@@ -2467,7 +2506,7 @@ body,
   position: fixed;
   top: 20px;
   right: 20px;
-  z-index: 5000;
+  z-index: 2147483647;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -2904,7 +2943,7 @@ body,
   font-size: 12px;
   cursor: pointer;
   padding: 4px;
-  border-radius: 50%;
+  border-radius: var(--radius-sm);
   transition: var(--transition-fast);
   width: 24px;
   height: 24px;
@@ -2914,8 +2953,8 @@ body,
 }
 
 .panel-popout-btn:hover {
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  background: transparent;
 }
 
 .panel-popin-btn {

@@ -108,22 +108,12 @@ const getDirSize = async (dirPath) => {
 
 app.use(express.static("public", { index: false }));
 
-/**
- * Returns the best default browse path for the current environment.
- * - Docker: /app/managed/home (the mounted host volume)
- * - Native: parent of os.homedir() - /Users on macOS, /home on Linux, etc.
- *   Works for any username automatically.
- */
 function getDefaultBrowsePath() {
   if (fs.existsSync("/app/managed/home")) return "/app/managed/home";
   return os.homedir();
 }
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "landing.html"));
-});
-
-app.get("/app", async (req, res) => {
+async function serveTermiview(req, res) {
   try {
     const html = await fs.readFile(
       path.join(__dirname, "public", "index.html"),
@@ -139,6 +129,16 @@ app.get("/app", async (req, res) => {
   } catch (err) {
     res.status(500).send("Failed to load app");
   }
+}
+
+app.get("/", serveTermiview);
+
+app.get("/site", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "site", "index.html"));
+});
+
+app.get("/app", (req, res) => {
+  res.redirect(308, "/");
 });
 
 app.get("/api/files", async (req, res) => {
