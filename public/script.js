@@ -13,6 +13,22 @@ const isThemePreview = new URLSearchParams(window.location.search).has(
   "theme-preview",
 );
 
+function quoteShellPath(value) {
+  return `'${String(value).replace(/'/g, "'\\\"'\\\"'")}'`;
+}
+
+function syncTerminalToPath(path) {
+  if (
+    !window.settingsManager?.settings?.syncTerminalPath ||
+    !termSocket ||
+    termSocket.readyState !== WebSocket.OPEN ||
+    !path
+  ) {
+    return;
+  }
+  termSocket.send(`cd -- ${quoteShellPath(path)}\r`);
+}
+
 function openTerminal() {
   try {
     if (
@@ -171,6 +187,18 @@ function openTerminal() {
       terminal.focus();
     };
     termSocket.onmessage = (e) => {
+      if (typeof e.data === "string" && e.data.startsWith("{")) {
+        try {
+          const message = JSON.parse(e.data);
+          if (
+            message.type === "termiview-path" &&
+            window.settingsManager?.settings?.syncTerminalPath
+          ) {
+            window.fileExplorer?.loadFiles(message.path, false, false, false);
+            return;
+          }
+        } catch (_) {}
+      }
       terminal.write(e.data);
     };
     termSocket.onclose = () => {
@@ -909,7 +937,13 @@ class FileExplorer {
     }
   }
 
-  async loadFiles(path, skipCache = false, silent = false) {
+  async loadFiles(
+    path,
+    skipCache = false,
+    silent = false,
+    syncTerminal = true,
+  ) {
+    const previousPath = this.currentPath;
     if (!skipCache && this.cache.has(path)) {
       const cached = this.cache.get(path);
       if (Date.now() - cached.timestamp < this.cacheTimeout) {
@@ -919,6 +953,9 @@ class FileExplorer {
         this.clearSelection();
         this.updateHistory(path);
         this.updateToolbar();
+        if (syncTerminal && this.currentPath !== previousPath) {
+          syncTerminalToPath(this.currentPath);
+        }
         return;
       } else {
         this.cache.delete(path);
@@ -971,6 +1008,9 @@ class FileExplorer {
 
       this.updateHistory(path);
       this.updateToolbar();
+      if (syncTerminal && this.currentPath !== previousPath) {
+        syncTerminalToPath(this.currentPath);
+      }
     } catch (error) {
       if (!silent) this.showNotification(error.message, "error");
     } finally {
@@ -2411,6 +2451,7 @@ class SettingsManager {
       sortOrder: "asc",
       startupPath: window.__TERMIVIEW_DEFAULT_PATH__ || "/",
       startupCommand: "",
+      syncTerminalPath: true,
       accentColor: "#bdd6ff",
       customTheme: null,
     };
@@ -2515,11 +2556,6 @@ class SettingsManager {
         "--file-icon-color",
         `${rgb.r}, ${rgb.g}, ${rgb.b}`,
       );
-    }
-
-    const colorInput = document.getElementById("accent-color-input");
-    if (colorInput && colorInput.value !== accentColor) {
-      colorInput.value = accentColor;
     }
   }
 
@@ -3292,6 +3328,9 @@ class SettingsManager {
     const terminalFontSizeInput = document.getElementById(
       "terminal-font-size-input",
     );
+    const syncTerminalPathInput = document.getElementById(
+      "sync-terminal-path-input",
+    );
     const updateRepositoryInput = document.getElementById(
       "update-repository-input",
     );
@@ -3307,6 +3346,8 @@ class SettingsManager {
       startupCommandInput.value = this.settings.startupCommand || "";
     if (terminalFontSizeInput)
       terminalFontSizeInput.value = this.settings.terminalFontSize || 11;
+    if (syncTerminalPathInput)
+      syncTerminalPathInput.checked = this.settings.syncTerminalPath !== false;
 
     button.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -3346,6 +3387,13 @@ class SettingsManager {
       terminalFontSizeInput.value = this.settings.terminalFontSize;
       this.saveSettings();
     });
+    syncTerminalPathInput?.addEventListener("change", () => {
+      this.settings.syncTerminalPath = syncTerminalPathInput.checked;
+      this.saveSettings({ applyLayout: false });
+      if (syncTerminalPathInput.checked) {
+        syncTerminalToPath(window.fileExplorer?.currentPath);
+      }
+    });
 
     const setUpdateStatus = (message, canApply = false) => {
       if (updateStatus) updateStatus.textContent = message;
@@ -3361,7 +3409,7 @@ class SettingsManager {
           updateBranchInput.value = config.branch || "main";
         setUpdateStatus(
           config.configured
-            ? "Repository connected. Check for new releases."
+            ? `Version ${config.currentVersion || "unknown"}. Check for new releases.`
             : "No repository connected.",
         );
       } catch {
@@ -3403,9 +3451,8 @@ class SettingsManager {
           if (!response.ok) throw new Error(data.error);
           setUpdateStatus(
             data.updateAvailable
-              ? "Update ready to install."
-              : "This instance is up to date.",
-            data.updateAvailable,
+              ? `${data.latestRelease.name} is available (you have ${data.currentVersion}).`
+              : `You are up to date (${data.currentVersion}).`,
           );
         } catch (error) {
           setUpdateStatus(error.message);
@@ -3425,17 +3472,6 @@ class SettingsManager {
     });
     if (updateRepositoryInput || updateBranchInput || updateStatus) {
       loadUpdateConfig();
-    }
-
-    const accentColorInput = document.getElementById("accent-color-input");
-    if (accentColorInput) {
-      accentColorInput.value = this.settings.accentColor || "#bdd6ff";
-      accentColorInput.addEventListener("input", (e) => {
-        e.stopPropagation();
-        this.settings.accentColor = accentColorInput.value;
-        this.saveSettings({ applyLayout: false });
-        this.updatePresetActive();
-      });
     }
 
     const themeInput = document.getElementById("custom-theme-input");

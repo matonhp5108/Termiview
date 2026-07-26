@@ -3,7 +3,11 @@
 </p>
 <h1 align="center">Termiview</h1>
 <p align="center">Termiview is a powerful web-based file explorer with terminal integration, system monitoring, and modern UI. Built with Node.js and designed for efficiency and ease of use.</p>
-
+<p align="center">
+<img src="https://badgen.net/docker/pulls/phantom8015/termiview?icon=docker&label=pulls" alt="Docker Pulls"/>
+<img src="https://badgen.net/docker/size/phantom8015/termiview?icon=docker&label=image%20size" alt="Docker Image Size"/>
+<img src="https://badgen.net/github/stars/matonhp5108/termiview?icon=github&label=stars" alt="GitHub Stars"/>
+</p>
 ## Features
 
 - **File Management** - Browse, upload, download, and manage files with drag-and-drop support

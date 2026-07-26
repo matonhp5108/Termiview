@@ -2,6 +2,9 @@ const { Server } = require("ws");
 const pty = require("node-pty");
 const { spawn } = require("child_process");
 const url = require("url");
+const fs = require("fs");
+const path = require("path");
+const os = require("os");
 
 function terminal(server) {
   const wss = new Server({ noServer: true });
@@ -18,6 +21,7 @@ function terminal(server) {
       isReady: false,
       localEcho: false,
       inputBuffer: "",
+      cwd: process.cwd(),
       bufferedData: [],
       terminalId,
     };
@@ -169,6 +173,10 @@ function terminal(server) {
     });
   }
 
+  function broadcastControl(connectionData, type, payload) {
+    broadcast(connectionData, JSON.stringify({ type, ...payload }));
+  }
+
   function normalizePipeOutput(data) {
     return data.replace(/\r?\n/g, "\r\n");
   }
@@ -177,8 +185,10 @@ function terminal(server) {
     for (const char of input) {
       if (char === "\r" || char === "\n") {
         broadcast(connectionData, "\r\n");
-        connectionData.process.write(`${connectionData.inputBuffer}\n`);
+        const command = connectionData.inputBuffer;
+        connectionData.process.write(`${command}\n`);
         connectionData.inputBuffer = "";
+        syncExplorerPath(connectionData, command);
       } else if (char === "\b" || char === "\x7f") {
         if (connectionData.inputBuffer.length > 0) {
           connectionData.inputBuffer = connectionData.inputBuffer.slice(0, -1);
@@ -201,11 +211,29 @@ function terminal(server) {
       } else if (char === "\x0c") {
         connectionData.inputBuffer = "";
         connectionData.process.write("clear\n");
+      } else if (char === "\t") {
+        broadcast(connectionData, "\x07");
       } else {
         connectionData.inputBuffer += char;
         broadcast(connectionData, char);
       }
     }
+  }
+
+  function syncExplorerPath(connectionData, command) {
+    const match = command.trim().match(/^cd(?:\s+--)?(?:\s+(.+))?$/);
+    if (!match) return;
+    const rawPath = (match[1] || "~").trim().replace(/^['"]|['"]$/g, "");
+    if (rawPath === "-") return;
+    const expandedPath = rawPath.startsWith("~")
+      ? path.join(os.homedir(), rawPath.slice(1))
+      : rawPath;
+    const nextPath = path.resolve(connectionData.cwd, expandedPath);
+    try {
+      if (!fs.statSync(nextPath).isDirectory()) return;
+      connectionData.cwd = nextPath;
+      broadcastControl(connectionData, "termiview-path", { path: nextPath });
+    } catch {}
   }
 
   server.on("upgrade", (req, socket, head) => {

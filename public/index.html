@@ -149,24 +149,13 @@
                   value="11"
                 />
               </div>
-              <div class="menu-separator"></div>
               <div class="settings-color-row">
-                <label>Accent Color</label>
-                <input
-                  id="accent-color-input"
-                  type="color"
-                  value="#64a0ff"
-                  style="
-                    width: 32px;
-                    height: 32px;
-                    padding: 2px;
-                    border-radius: 50%;
-                    cursor: pointer;
-                    background: transparent;
-                    border: 2px solid rgba(255, 255, 255, 0.15);
-                  "
-                />
+                <label for="sync-terminal-path-input">Sync terminal path</label>
+                <input id="sync-terminal-path-input" type="checkbox" checked />
               </div>
+              <p class="settings-help">
+                Keep the file explorer and terminal in the same folder.
+              </p>
               <div class="menu-separator"></div>
               <div class="settings-row theme-settings-row">
                 <label>Custom theme</label>
@@ -184,6 +173,16 @@
                 <a class="theme-editor-link" href="/site/theme-editor.html"
                   >Create a theme ↗</a
                 >
+              </div>
+              <div class="menu-separator"></div>
+              <div class="settings-row update-settings-row">
+                <label>Updates</label>
+                <p id="update-status" class="settings-help">
+                  Check whether a new release is available.
+                </p>
+                <button id="update-check-btn" type="button">
+                  Check for updates
+                </button>
               </div>
             </div>
           </div>
