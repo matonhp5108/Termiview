@@ -6,12 +6,15 @@ const archiver = require("archiver");
 const yauzl = require("yauzl");
 const mime = require("mime-types");
 const os = require("os");
+const http = require("http");
 const si = require("systeminformation");
 const { execFile } = require("child_process");
 const { promisify } = require("util");
+const { version: APP_VERSION } = require("./package.json");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const REQUESTED_PORT = Number.parseInt(process.env.PORT || "3000", 10);
+const PORT = Number.isInteger(REQUESTED_PORT) ? REQUESTED_PORT : 3000;
 const execFileAsync = promisify(execFile);
 const RELEASE_REPOSITORY = "matonhp5108/termiview";
 const RELEASE_API_URL = `https://api.github.com/repos/${RELEASE_REPOSITORY}/releases/latest`;
@@ -608,6 +611,7 @@ app.get("/api/live-files", async (req, res) => {
 app.get("/api/updates", async (req, res) => {
   res.json({
     configured: true,
+    currentVersion: APP_VERSION,
     repository: `https://github.com/${RELEASE_REPOSITORY}.git`,
     branch: "main",
     releaseSource: RELEASE_REPOSITORY,
@@ -642,33 +646,17 @@ async function getLatestRelease() {
   };
 }
 
-async function getCurrentReleaseVersion() {
-  if (
-    process.env.APP_RELEASE_VERSION &&
-    process.env.APP_RELEASE_VERSION !== "development"
-  ) {
-    return process.env.APP_RELEASE_VERSION;
-  }
-  try {
-    const { stdout } = await execFileAsync(
-      "git",
-      ["describe", "--tags", "--exact-match"],
-      {
-        cwd: __dirname,
-        timeout: 10000,
-      },
-    );
-    return stdout.trim() || "development";
-  } catch {
-    return "development";
-  }
+function comparableVersion(version) {
+  return String(version || "")
+    .trim()
+    .replace(/^v/i, "");
 }
 
 app.post("/api/updates/check", async (req, res) => {
   try {
     const [latestRelease, currentVersion] = await Promise.all([
       getLatestRelease(),
-      getCurrentReleaseVersion(),
+      APP_VERSION,
     ]);
     if (!latestRelease) {
       return res.json({
@@ -679,7 +667,9 @@ app.post("/api/updates/check", async (req, res) => {
       });
     }
     res.json({
-      updateAvailable: currentVersion !== latestRelease.version,
+      updateAvailable:
+        comparableVersion(currentVersion) !==
+        comparableVersion(latestRelease.version),
       currentVersion,
       latestRelease,
       updateMode: process.env.WATCHTOWER_UPDATE_URL ? "docker" : "git",
@@ -737,9 +727,28 @@ app.post("/api/updates/apply", async (req, res) => {
   }
 });
 
-const server = app.listen(PORT, () => {
-  console.log(`Termiview running on http://localhost:${PORT}`);
-});
+const server = http.createServer(app);
+
+function listenOnAvailablePort(port, attemptsRemaining = 100) {
+  const onListening = () => {
+    server.removeListener("error", onError);
+    console.log(`Termiview running on http://localhost:${port}`);
+  };
+  const onError = (error) => {
+    server.removeListener("listening", onListening);
+    if (error.code === "EADDRINUSE" && attemptsRemaining > 0) {
+      console.warn(`Port ${port} is in use; trying ${port + 1}.`);
+      listenOnAvailablePort(port + 1, attemptsRemaining - 1);
+      return;
+    }
+    console.error(`Unable to start Termiview on port ${port}:`, error.message);
+    process.exitCode = 1;
+  };
+
+  server.once("listening", onListening);
+  server.once("error", onError);
+  server.listen(port);
+}
 
 if (terminal) {
   terminal(server);
@@ -747,3 +756,5 @@ if (terminal) {
 } else {
   console.warn("⚠ Terminal functionality disabled (terminal.js not found)");
 }
+
+listenOnAvailablePort(PORT);

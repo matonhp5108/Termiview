@@ -16,12 +16,13 @@ function terminal(server) {
       process: null,
       clients: new Set(),
       isReady: false,
+      localEcho: false,
+      inputBuffer: "",
       bufferedData: [],
       terminalId,
     };
 
     terminalConnections.set(terminalId, connectionData);
-    setupLocalConnection(connectionData);
     return connectionData;
   }
 
@@ -29,12 +30,14 @@ function terminal(server) {
     const shell =
       process.platform === "win32"
         ? "powershell.exe"
-        : process.env.SHELL || "/bin/bash";
+        : process.env.SHELL ||
+          (process.platform === "darwin" ? "/bin/zsh" : "/bin/bash");
+    const shellArgs = process.platform === "win32" ? [] : ["-l"];
 
     console.log(`Starting terminal with shell: ${shell}`);
 
     try {
-      connectionData.process = pty.spawn(shell, [], {
+      connectionData.process = pty.spawn(shell, shellArgs, {
         name: "xterm-color",
         cols: 80,
         rows: 24,
@@ -45,6 +48,8 @@ function terminal(server) {
           COLORTERM: "truecolor",
         },
       });
+      connectionData.localEcho = false;
+      connectionData.inputBuffer = "";
 
       console.log(
         `Terminal process started with PID: ${connectionData.process.pid}`,
@@ -65,6 +70,7 @@ function terminal(server) {
         );
         connectionData.process = null;
         connectionData.isReady = false;
+        connectionData.localEcho = false;
       });
 
       if (connectionData.bufferedData.length > 0) {
@@ -78,32 +84,62 @@ function terminal(server) {
         "PTY unavailable; using shell-stream fallback:",
         err.message,
       );
-      setupPipeConnection(connectionData, shell);
+      setupPipeConnection(connectionData, shell, shellArgs);
     }
   }
 
-  function setupPipeConnection(connectionData, shell) {
+  function setupPipeConnection(connectionData, shell, shellArgs) {
     try {
-      const child = spawn(shell, ["-i"], {
-        cwd: process.cwd(),
-        env: { ...process.env, TERM: "xterm-256color", COLORTERM: "truecolor" },
-        stdio: ["pipe", "pipe", "pipe"],
-      });
+      const child = spawn(
+        shell,
+        process.platform === "win32" ? [] : [...shellArgs, "-i"],
+        {
+          cwd: process.cwd(),
+          env: {
+            ...process.env,
+            TERM: "xterm-256color",
+            COLORTERM: "truecolor",
+          },
+          detached: process.platform !== "win32",
+          stdio: ["pipe", "pipe", "pipe"],
+        },
+      );
 
       connectionData.process = {
         pid: child.pid,
 
         write: (data) => child.stdin.write(data.replace(/\r/g, "\n")),
         kill: () => child.kill(),
+        interrupt: () => {
+          if (process.platform !== "win32") {
+            process.kill(-child.pid, "SIGINT");
+          } else {
+            child.kill("SIGINT");
+          }
+        },
       };
+
+      connectionData.localEcho = true;
+      connectionData.inputBuffer = "";
       connectionData.isReady = true;
       child.stdout.on("data", (data) =>
-        broadcast(connectionData, data.toString()),
+        broadcast(connectionData, normalizePipeOutput(data.toString())),
       );
       child.stderr.on("data", (data) =>
-        broadcast(connectionData, data.toString()),
+        broadcast(connectionData, normalizePipeOutput(data.toString())),
       );
-      child.on("exit", ({ code, signal }) => {
+      child.on("error", (error) => {
+        console.error("Terminal fallback process failed:", error);
+        broadcast(
+          connectionData,
+          `\r\n\u001b[31mFailed to start terminal: ${error.message}\u001b[0m\r\n`,
+        );
+        connectionData.process = null;
+        connectionData.isReady = false;
+        connectionData.localEcho = false;
+        connectionData.localEcho = false;
+      });
+      child.on("exit", (code, signal) => {
         broadcast(
           connectionData,
           `\r\n\u001b[31m[Terminal exited with code ${code ?? signal}]\u001b[0m\r\n`,
@@ -133,6 +169,45 @@ function terminal(server) {
     });
   }
 
+  function normalizePipeOutput(data) {
+    return data.replace(/\r?\n/g, "\r\n");
+  }
+
+  function handlePipeInput(connectionData, input) {
+    for (const char of input) {
+      if (char === "\r" || char === "\n") {
+        broadcast(connectionData, "\r\n");
+        connectionData.process.write(`${connectionData.inputBuffer}\n`);
+        connectionData.inputBuffer = "";
+      } else if (char === "\b" || char === "\x7f") {
+        if (connectionData.inputBuffer.length > 0) {
+          connectionData.inputBuffer = connectionData.inputBuffer.slice(0, -1);
+          broadcast(connectionData, "\b \b");
+        }
+      } else if (char === "\x03") {
+        const hadInput = connectionData.inputBuffer.length > 0;
+        connectionData.inputBuffer = "";
+        broadcast(connectionData, "^C\r\n");
+        if (!hadInput) {
+          try {
+            connectionData.process.interrupt();
+          } catch (error) {
+            console.warn(
+              "Could not interrupt terminal process:",
+              error.message,
+            );
+          }
+        }
+      } else if (char === "\x0c") {
+        connectionData.inputBuffer = "";
+        connectionData.process.write("clear\n");
+      } else {
+        connectionData.inputBuffer += char;
+        broadcast(connectionData, char);
+      }
+    }
+  }
+
   server.on("upgrade", (req, socket, head) => {
     if (!req.url.startsWith("/terminal")) return;
 
@@ -152,6 +227,10 @@ function terminal(server) {
     const connectionData = getOrCreateConnection(terminalId);
     connectionData.clients.add(ws);
 
+    if (!connectionData.process && !connectionData.isReady) {
+      setupLocalConnection(connectionData);
+    }
+
     console.log(
       `Terminal ${terminalId} now has ${connectionData.clients.size} client(s)`,
     );
@@ -159,6 +238,10 @@ function terminal(server) {
     ws.on("message", (msg) => {
       const input = msg.toString();
       if (connectionData.process && connectionData.isReady) {
+        if (connectionData.localEcho) {
+          handlePipeInput(connectionData, input);
+          return;
+        }
         connectionData.process.write(input);
       } else {
         connectionData.bufferedData.push(input);
