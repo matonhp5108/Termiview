@@ -8,6 +8,11 @@
 <img src="https://badgen.net/docker/size/phantom8015/termiview?icon=docker&label=image%20size" alt="Docker Image Size"/>
 <img src="https://badgen.net/github/stars/matonhp5108/termiview?icon=github&label=stars" alt="GitHub Stars"/>
 </p>
+
+<p align="center">
+<img src="public/site/assets/termiview-ui.jpg" alt="Termiview file explorer and terminal interface" width="900"/>
+</p>
+
 ## Features
 
 - **File Management** - Browse, upload, download, and manage files with drag-and-drop support
