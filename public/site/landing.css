@@ -251,8 +251,8 @@ h1 em {
 .product-frame {
   z-index: 1;
   width: min(1180px, calc(100% - 48px));
-  height: min(55vw, 610px);
-  min-height: 330px;
+  height: auto;
+  min-height: 0;
   margin: 0 auto;
   overflow: hidden;
   position: relative;
@@ -298,15 +298,12 @@ h1 em {
 }
 .product-frame img {
   width: 100%;
+  height: auto;
   display: block;
-  opacity: 0.92;
+  opacity: 1;
 }
 .frame-fade {
-  position: absolute;
-  inset: auto 0 0;
-  height: 44%;
-  background: linear-gradient(transparent, #090909 94%);
-  pointer-events: none;
+  display: none;
 }
 .trusted-strip {
   width: min(1180px, calc(100% - 48px));
@@ -675,7 +672,6 @@ footer a:not(.wordmark):hover {
   }
   .product-frame {
     width: calc(100% - 28px);
-    min-height: 230px;
   }
   .hero-field::before {
     background-size:
