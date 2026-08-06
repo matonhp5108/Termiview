@@ -490,20 +490,24 @@ h1 em {
 .copy-glyph,
 .copy-glyph::before {
   position: absolute;
-  width: 9px;
-  height: 10px;
   border: 1.5px solid currentColor;
-  border-radius: 2px;
 }
 .copy-glyph {
+  width: 10px;
+  height: 11px;
   top: 5px;
-  left: 6px;
+  left: 4px;
+  border-radius: 2px;
 }
 .copy-glyph::before {
   content: "";
+  width: 6px;
+  height: 3px;
   top: -4px;
-  left: -4px;
+  left: 1px;
   background: #0b111a;
+  border-bottom: 0;
+  border-radius: 2px 2px 0 0;
 }
 .copy-command.is-copied .copy-glyph {
   width: 10px;
